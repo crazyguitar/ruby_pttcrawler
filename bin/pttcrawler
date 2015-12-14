@@ -4,7 +4,7 @@
 require 'pttcrawler'
 
 if ARGV.size != 3 then
-  print("ruby crawler.rb [usr] [pwd] [board]\n")
+  print("ruby pttcrawler [usr] [pwd] [board]\n")
   exit(0)
 end
 

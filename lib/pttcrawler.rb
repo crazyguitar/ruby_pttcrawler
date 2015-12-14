@@ -33,7 +33,7 @@ module Pttcrawler
     #   usr: ptt account
     #   pwd: ptt password
 
-    def initialize(usr, pwd, port:23, timeout:3, waittime:1, log_level:PTT_LOG)
+    def initialize(usr, pwd, port:23, timeout:3, waittime:1, log_level:PTT_DEBUG)
       @usr = usr
       @pwd = pwd
       @ptt = Net::Telnet.new('Host'     => PTT_HOST, 
@@ -42,6 +42,9 @@ module Pttcrawler
                              'Waittime' => waittime)
       @log_level  = log_level
       @ptt_logger = Logger.new(STDOUT)
+      @ptt_logger.formatter = proc do |severity, datetime, progname, msg|
+        "#{msg}"
+      end   
     end
 
   public
@@ -53,12 +56,12 @@ module Pttcrawler
       end
       # step2: send user account
       @ptt.cmd('String' => " " + USR, 
-              'Match'  => /#{PASSWORD_MSG}/n) do |s|
+              'Match'   => /#{PASSWORD_MSG}/n) do |s|
         @ptt_logger.debug(s)
       end
       # step3: send password
-      @ptt.cmd('String' => " " + USR, 
-              'Match'  => /#{PASSWORD_MSG}/n) do |s|
+      @ptt.cmd('String' => PWD, 
+               'Match'  => /#{PRESSKEY_CONTINUE}/n) do |s|
         @ptt_logger.debug(s) 
       end
       # step4: home page
@@ -71,13 +74,12 @@ module Pttcrawler
     end
 
     def get_today_article_list(board)
+      line = checkin(board)
       article_list = []
       begin
-        line = checkin(board)
-        article_list = []
         loop do
           line = gusb_ansi_by_space(line)
-          info = authors_and_articles(line)
+          info = get_authors_and_articles(line)
           if false == info.any? {|num, date, author| Date.today === Date.parse(date)}
             raise StopIteration
           end
@@ -87,10 +89,10 @@ module Pttcrawler
               article_list.push([num, date, author])
             end
           end
-          line = article_list_page_up(ptt)
+          line = article_list_page_up
         end
       ensure
-        @ptt_logger.debug page_info 
+        @ptt_logger.debug article_list 
       end
     end
 
@@ -112,6 +114,7 @@ module Pttcrawler
         if /#{PRESSKEY_CONTINUE}/n =~ line
           @ptt.print('\n')
           line = @ptt.waitfor(/#{ARTICLES_LIST}/n) do |s|
+            @ptt_logger.debug(s)
           end
         end
       rescue Net::ReadTimeout
@@ -146,18 +149,18 @@ module Pttcrawler
     end
 
     def article_list_page_up
-      ptt.print('P')
-      ptt.waitfor(/#{ANSI_CURSOR}/n) do |s|
-        print s
+      @ptt.print('P')
+      @ptt.waitfor(/#{ANSI_CURSOR}/n) do |s|
+        @ptt_logger.debug(s)
       end
-      ptt.print('b')
-      ptt.waitfor(/#{PRESSKEY_CONTINUE}/n) do |s|
-        print s
+      @ptt.print('b')
+      @ptt.waitfor(/#{PRESSKEY_CONTINUE}/n) do |s|
+        @ptt_logger.debug(s)
       end
       begin
-        ptt.print('r')
-        ptt.waitfor(/#{ARTICLES_LIST}/n) do |s|
-          PTT_LOG.debug(s)
+        @ptt.print('r')
+        @ptt.waitfor(/#{ARTICLES_LIST}/n) do |s|
+          @ptt_logger.debug(s)
         end
       rescue Net::ReadTimeout
         retry
