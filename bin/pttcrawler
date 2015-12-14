@@ -4,7 +4,7 @@
 require 'pttcrawler'
 
 if ARGV.size != 3 then
-  print("ruby pttcrawler [usr] [pwd] [board]\n")
+  print("bin/pttcrawler [usr] [pwd] [board]\n")
   exit(0)
 end
 
@@ -12,7 +12,7 @@ USR               = ARGV[0]
 PWD               = ARGV[1]
 TARGET_BOARD      = ARGV[2] 
 
-crawler = Pttcrawler::Crawler.new(USR, PWD, log_level:Pttcrawler::PTT_DEBUG) 
-crawler.login do
+crawler = Pttcrawler::Crawler.new(log_level:Pttcrawler::PTT_DEBUG) 
+crawler.login USR, PWD do
   crawler.get_today_article_list(TARGET_BOARD)
 end

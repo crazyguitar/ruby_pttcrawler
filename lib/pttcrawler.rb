@@ -27,15 +27,13 @@ module Pttcrawler
     # crawling ptt article
     #
     # Example:
-    #   >> c = Crawler.new('iPad3', 'Lavchi')
+    #   >> c = Crawler.new()
     #
     # Arguments
     #   usr: ptt account
     #   pwd: ptt password
 
-    def initialize(usr, pwd, port:23, timeout:3, waittime:1, log_level:PTT_DEBUG)
-      @usr = usr
-      @pwd = pwd
+    def initialize(port:23, timeout:3, waittime:1, log_level:PTT_DEBUG)
       @ptt = Net::Telnet.new('Host'     => PTT_HOST, 
                              'Port'     => port,
                              'Timeout'  => timeout,
@@ -49,18 +47,18 @@ module Pttcrawler
 
   public
 
-    def login
+    def login(usr, pwd)
       # step1: connect to server
       @ptt.waitfor(/#{ACCOUNT_MSG}#{ANSI_DISP_ATTR}.*(?>\b+)$/n) do |s|
         @ptt_logger.debug(s)
       end
       # step2: send user account
-      @ptt.cmd('String' => " " + USR, 
+      @ptt.cmd('String' => " " + usr, 
               'Match'   => /#{PASSWORD_MSG}/n) do |s|
         @ptt_logger.debug(s)
       end
       # step3: send password
-      @ptt.cmd('String' => PWD, 
+      @ptt.cmd('String' => pwd, 
                'Match'  => /#{PRESSKEY_CONTINUE}/n) do |s|
         @ptt_logger.debug(s) 
       end
@@ -105,7 +103,7 @@ module Pttcrawler
         @ptt_logger.debug(s)
       end
       # step2: get entrance board string
-      line = @ptt.cmd('String' => TARGET_BOARD, 
+      line = @ptt.cmd('String' => board, 
                       'Match'  => /(?>#{PRESSKEY_CONTINUE}|#{ARTICLES_LIST})/n) do |s|
         @ptt_logger.debug(s) 
       end 
