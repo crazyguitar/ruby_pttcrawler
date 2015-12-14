@@ -6,7 +6,7 @@ class PttcrawlerTest < Test::Unit::TestCase
     usr = ENV['PTT_USR']
     pwd = ENV['PTT_PWD']
     board = 'Gossiping'
-    crawler = Pttcrawler::Crawler.new
+    crawler = Pttcrawler::Crawler.new(log_level:Pttcrawler::PTT_DEBUG)
     crawler.login usr, pwd do
       crawler.get_today_article_list(board)
     end

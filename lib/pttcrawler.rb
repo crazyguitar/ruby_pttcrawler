@@ -33,13 +33,13 @@ module Pttcrawler
     #   usr: ptt account
     #   pwd: ptt password
 
-    def initialize(port:23, timeout:3, waittime:1, log_level:PTT_DEBUG)
+    def initialize(port:23, timeout:3, waittime:1, log_level:PTT_WARN)
       @ptt = Net::Telnet.new('Host'     => PTT_HOST, 
                              'Port'     => port,
                              'Timeout'  => timeout,
                              'Waittime' => waittime)
-      @log_level  = log_level
       @ptt_logger = Logger.new(STDOUT)
+      @ptt_logger.level  = log_level
       @ptt_logger.formatter = proc do |severity, datetime, progname, msg|
         "#{msg}"
       end   
