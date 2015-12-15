@@ -92,6 +92,7 @@ module Pttcrawler
       ensure
         @ptt_logger.debug article_list 
       end
+      return article_list
     end
 
   private
